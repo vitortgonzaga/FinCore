@@ -1,0 +1,6 @@
+CREATE TABLE accounts (
+    id UUID PRIMARY KEY,
+    owner_name VARCHAR(255) NOT NULL,
+    status VARCHAR(20) NOT NULL CHECK (status IN ('ACTIVE', 'INACTIVE')),
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL
+);
