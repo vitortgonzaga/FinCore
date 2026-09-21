@@ -1,14 +1,49 @@
 # FinCore
 
-Backend financeiro educacional desenvolvido de forma incremental para estudar engenharia de software com problemas próximos de sistemas reais.
+[![CI](https://github.com/vitortgonzaga/FinCore/actions/workflows/ci.yml/badge.svg)](https://github.com/vitortgonzaga/FinCore/actions/workflows/ci.yml)
+![Java](https://img.shields.io/badge/Java-25-orange)
+![Spring Boot](https://img.shields.io/badge/Spring_Boot-4.1.1-6DB33F)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-18.6-4169E1)
 
-O projeto começa como um monólito modular e só recebe novas tecnologias quando existe um problema concreto que justifique seu uso.
+API REST financeira desenvolvida de forma incremental para estudar desafios reais de engenharia de backend: persistência, transações, consistência, concorrência, idempotência e observabilidade.
 
-## Fase atual
+O projeto começa como um monólito organizado por feature e só incorpora novas tecnologias quando existe um problema concreto que justifique seu uso.
 
-**Fase 0 — Setup e engenharia básica**
+## Estado atual
 
-Implementado até o momento:
+**Fase 1 — Accounts (em desenvolvimento)**
+
+- criação de contas com `POST /accounts`;
+- UUID, status inicial e data de criação definidos pelo domínio;
+- DTOs imutáveis com records e Bean Validation;
+- contrato JSON estrito, rejeitando campos desconhecidos;
+- persistência PostgreSQL com JPA/Hibernate;
+- schema versionado com Flyway;
+- testes unitários, de repository e HTTP;
+- PostgreSQL descartável nos testes com Testcontainers;
+- pipeline de CI com GitHub Actions.
+
+### Exemplo
+
+```http
+POST /accounts
+Content-Type: application/json
+
+{
+  "ownerName": "Vitor"
+}
+```
+
+```json
+{
+  "id": "2f6a4460-7c13-4f27-99db-b188f45ce552",
+  "ownerName": "Vitor",
+  "status": "ACTIVE",
+  "createdAt": "2026-09-20T22:30:00Z"
+}
+```
+
+## Stack
 
 - Java 25 e Maven Wrapper;
 - Spring Boot 4.1.1;
@@ -16,123 +51,46 @@ Implementado até o momento:
 - Spring Data JPA e Hibernate;
 - PostgreSQL 18.6;
 - Flyway;
-- Bean Validation;
-- Spring Boot Actuator;
+- JUnit, AssertJ e Mockito;
 - Testcontainers;
-- teste de inicialização e health check;
-- CI mínimo com GitHub Actions;
-- configuração local por profile e variáveis de ambiente.
+- GitHub Actions.
 
-O roteiro completo está em [FinCore-Project-Guide.md](FinCore-Project-Guide.md).
+## Arquitetura atual
 
-## Requisitos
+```text
+HTTP / JSON
+    ↓
+AccountController
+    ↓
+AccountService
+    ↓
+AccountRepository
+    ↓
+JPA / Hibernate
+    ↓
+PostgreSQL
+```
 
-- JDK 25;
-- Docker;
-- Git.
+Entidades JPA não são expostas diretamente pela API. Requests e responses usam DTOs próprios, mantendo o contrato HTTP separado da persistência.
 
-Não é necessário instalar o Maven globalmente, pois o projeto utiliza Maven Wrapper.
+## Executar
 
-## Executar com PostgreSQL temporário
+Requisitos: **JDK 25** e **Docker**.
 
-Para desenvolvimento rápido, execute pela IDE:
+Com PostgreSQL temporário, execute pela IDE:
 
 ```text
 src/test/java/com/vitortgonzaga/fincore/TestFinCoreApplication.java
 ```
 
-Essa classe inicia a aplicação e cria um PostgreSQL temporário com Testcontainers. O banco é removido quando a aplicação é encerrada.
-
-## Executar com PostgreSQL local
-
-Crie o container:
+Para executar os testes:
 
 ```bash
-docker run \
-  --name fincore-postgres \
-  -e POSTGRES_DB=fincore \
-  -e POSTGRES_USER=fincore \
-  -e POSTGRES_PASSWORD=fincore_local \
-  -p 5432:5432 \
-  -d postgres:18.6
+./mvnw --batch-mode verify
 ```
 
-Inicie a aplicação com o profile local:
+Os testes de integração iniciam um PostgreSQL real e descartável, aplicam as migrations e exercitam a aplicação sem depender do banco local.
 
-```bash
-SPRING_PROFILES_ACTIVE=local \
-DB_PASSWORD=YourPassword \
-./mvnw spring-boot:run
-```
+## Evolução
 
-Variáveis suportadas:
-
-| Variável | Obrigatória | Padrão |
-|---|---:|---|
-| `DB_URL` | Não | `jdbc:postgresql://localhost:5432/fincore` |
-| `DB_USERNAME` | Não | `fincore` |
-| `DB_PASSWORD` | Sim | Sem padrão |
-
-Credenciais reais não devem ser adicionadas ao repositório.
-
-## Health check
-
-Com a aplicação iniciada:
-
-```bash
-curl http://localhost:8080/actuator/health
-```
-
-Resposta esperada:
-
-```json
-{"status":"UP"}
-```
-
-O Actuator agrega o estado da aplicação e do datasource configurado.
-
-## Migrations
-
-As migrations ficam em:
-
-```text
-src/main/resources/db/migration
-```
-
-Convenção de nomes:
-
-```text
-V<versão>__<descrição>.sql
-```
-
-Uma migration aplicada não deve ser alterada. Mudanças posteriores devem ser adicionadas em uma nova versão.
-
-## Testes
-
-Com o Docker ativo:
-
-```bash
-./mvnw verify
-```
-
-Os testes de integração iniciam um PostgreSQL descartável, executam as migrations e carregam o contexto Spring.
-
-## CI
-
-O workflow em `.github/workflows/ci.yml` executa o build e os testes em pushes e pull requests para a branch principal.
-
-## Estrutura
-
-```text
-src/
-├── main/
-│   ├── java/com/vitortgonzaga/fincore/
-│   └── resources/
-│       ├── application.properties
-│       ├── application-local.properties
-│       └── db/migration/
-└── test/
-    └── java/com/vitortgonzaga/fincore/
-```
-
-Pacotes de negócio serão criados somente quando as respectivas funcionalidades entrarem no projeto.
+O desenvolvimento segue fases com experimentos práticos, registradas em [FinCore-Project-Guide.md](FinCore-Project-Guide.md). Tecnologias como mensageria, cache e infraestrutura cloud entram apenas quando o domínio apresentar a necessidade correspondente.
