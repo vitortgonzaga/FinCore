@@ -3,6 +3,9 @@ package com.vitortgonzaga.fincore.account;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 
+import java.util.Optional;
+import java.util.UUID;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
@@ -39,5 +42,38 @@ public class AccountServiceTest {
         assertThatThrownBy(() -> accountService.create(" ")).isInstanceOf(IllegalArgumentException.class);
 
         verifyNoInteractions(accountRepository);
+    }
+
+    @Test
+    void shouldFindAccountById(){
+        AccountRepository accountRepository = mock(AccountRepository.class);
+        AccountService accountService = new AccountService(accountRepository);
+
+        Account createdAccount = new Account("Vitinho");
+        UUID accountId = createdAccount.getId();
+
+        when(accountRepository.findById(accountId)).thenReturn(Optional.of(createdAccount));
+
+        Account foundAccount = accountService.findById(accountId);
+
+        assertThat(foundAccount).isSameAs(createdAccount);
+        verify(accountRepository).findById(accountId);
+
+    }
+
+    @Test
+    void shouldThrowWhenAccountIsNotFound(){
+        AccountRepository accountRepository = mock(AccountRepository.class);
+        AccountService accountService = new AccountService(accountRepository);
+
+        UUID accountId = UUID.randomUUID();
+
+        when(accountRepository.findById(accountId)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> accountService.findById(accountId))
+                .isInstanceOf(AccountNotFoundException.class)
+                .hasMessage("Account not found: " + accountId);
+
+        verify(accountRepository).findById(accountId);
     }
 }
