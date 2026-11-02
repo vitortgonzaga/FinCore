@@ -3,6 +3,7 @@ package com.vitortgonzaga.fincore.account;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -75,5 +76,23 @@ public class AccountServiceTest {
                 .hasMessage("Account not found: " + accountId);
 
         verify(accountRepository).findById(accountId);
+    }
+
+    @Test
+    void shouldFindAllAccounts(){
+        AccountRepository accountRepository = mock(AccountRepository.class);
+        AccountService accountService = new AccountService(accountRepository);
+
+        Account firstAccount = new Account("Vitor");
+        Account secondAccount = new Account("Vitinho");
+        List<Account> accounts = List.of(firstAccount, secondAccount);
+
+        when(accountRepository.findAll()).thenReturn(accounts);
+
+        List<Account> targetAccounts = accountService.findAll();
+
+        assertThat(targetAccounts).containsExactly(firstAccount, secondAccount);
+        verify(accountRepository).findAll();
+
     }
 }

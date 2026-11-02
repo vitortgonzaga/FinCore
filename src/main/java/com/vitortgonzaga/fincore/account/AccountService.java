@@ -2,6 +2,7 @@ package com.vitortgonzaga.fincore.account;
 
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -21,5 +22,9 @@ public class AccountService {
     public Account findById(UUID accountId){
         return accountRepository.findById(accountId)
                 .orElseThrow(() -> new AccountNotFoundException(accountId));
+    }
+
+    public List<Account> findAll(){
+        return accountRepository.findAll();
     }
 }

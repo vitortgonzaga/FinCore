@@ -4,6 +4,7 @@ import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -34,5 +35,20 @@ public class AccountController {
                 searchedAccount.getOwnerName(),
                 searchedAccount.getStatus(),
                 searchedAccount.getCreatedAt());
+    }
+
+    @GetMapping
+    public List<AccountResponse> findAll(){
+        List<Account> searchedAccounts = accountService.findAll();
+
+        return searchedAccounts.stream()
+                .map(account -> new AccountResponse(
+                        account.getId(),
+                        account.getOwnerName(),
+                        account.getStatus(),
+                        account.getCreatedAt()
+                ))
+                .toList();
+
     }
 }
