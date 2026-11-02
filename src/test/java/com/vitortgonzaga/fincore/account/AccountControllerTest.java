@@ -79,7 +79,10 @@ public class AccountControllerTest {
                 """;
 
         mockMvc.perform(post("/accounts").contentType(MediaType.APPLICATION_JSON).content(requestBody))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.title").value("Malformed request"))
+                .andExpect(jsonPath("$.type").value("/errors/malformed-request"))
+                .andExpect(jsonPath("$.detail").value("Request body is malformed or contains unknown fields"));
     }
 
     @Test
@@ -149,6 +152,9 @@ public class AccountControllerTest {
         String invalidId = "not-a-valid-id";
 
         mockMvc.perform(get("/accounts/{id}", invalidId))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.title").value("Invalid Parameter"))
+                .andExpect(jsonPath("$.type").value("/errors/invalid-parameter"))
+                .andExpect(jsonPath("$.detail").value("Invalid value for parameter 'id'"));
     }
 }
