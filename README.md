@@ -14,9 +14,12 @@ O projeto começa como um monólito organizado por feature e só incorpora novas
 **Fase 1 — Accounts (em desenvolvimento)**
 
 - criação de contas com `POST /accounts`;
+- consulta de uma conta com `GET /accounts/{id}` e listagem com `GET /accounts`;
 - UUID, status inicial e data de criação definidos pelo domínio;
 - DTOs imutáveis com records e Bean Validation;
 - contrato JSON estrito, rejeitando campos desconhecidos;
+- erros padronizados no formato Problem Details (RFC 9457);
+- documentação interativa da API com Swagger UI;
 - persistência PostgreSQL com JPA/Hibernate;
 - schema versionado com Flyway;
 - testes unitários, de repository e HTTP;
@@ -43,6 +46,31 @@ Content-Type: application/json
 }
 ```
 
+### Erros
+
+Os erros seguem o formato [RFC 9457 (Problem Details)](https://www.rfc-editor.org/rfc/rfc9457), com `Content-Type: application/problem+json`. O campo `type` é um código estável para o cliente tratar cada caso, e o `detail` é um texto legível que pode mudar.
+
+| Situação | Status | `type` |
+|---|---|---|
+| Conta não encontrada | 404 | `/errors/account-not-found` |
+| Campos inválidos no corpo | 400 | `/errors/validation` |
+| Parâmetro da URL inválido (ex.: id que não é UUID) | 400 | `/errors/invalid-parameter` |
+| JSON malformado ou com campo desconhecido | 400 | `/errors/malformed-request` |
+
+Exemplo de erro de validação (`POST /accounts` com `ownerName` em branco):
+
+```json
+{
+  "type": "/errors/validation",
+  "title": "Invalid request",
+  "status": 400,
+  "detail": "Request has invalid fields",
+  "errors": [
+    { "field": "ownerName", "message": "must not be blank" }
+  ]
+}
+```
+
 ## Stack
 
 - Java 25 e Maven Wrapper;
@@ -51,6 +79,7 @@ Content-Type: application/json
 - Spring Data JPA e Hibernate;
 - PostgreSQL 18.6;
 - Flyway;
+- springdoc-openapi (Swagger UI);
 - JUnit, AssertJ e Mockito;
 - Testcontainers;
 - GitHub Actions.
@@ -82,6 +111,8 @@ Com PostgreSQL temporário, execute pela IDE:
 ```text
 src/test/java/com/vitortgonzaga/fincore/TestFinCoreApplication.java
 ```
+
+Com a aplicação rodando, a documentação interativa fica em `http://localhost:8080/swagger-ui.html`.
 
 Para executar os testes:
 
